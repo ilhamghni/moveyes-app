@@ -1,3 +1,5 @@
+import '../models/movie_detail.dart';
+
 class Movie {
   final int id;
   final String title;
@@ -23,9 +25,22 @@ class Movie {
       title: json['title'] as String,
       posterPath: json['poster_path'] as String?,
       backdropPath: json['backdrop_path'] as String?,
-      overview: json['overview'] as String,
+      overview: json['overview'] as String? ?? '',
       voteAverage: (json['vote_average'] as num).toDouble(),
       releaseDate: json['release_date'] as String? ?? 'Unknown',
+    );
+  }
+  
+  // Create a Movie from a MovieDetail
+  factory Movie.fromMovieDetail(MovieDetail detail) {
+    return Movie(
+      id: detail.id,
+      title: detail.title,
+      posterPath: detail.posterPath,
+      backdropPath: detail.backdropPath,
+      overview: detail.overview,
+      voteAverage: detail.voteAverage,
+      releaseDate: detail.releaseDate,
     );
   }
 }

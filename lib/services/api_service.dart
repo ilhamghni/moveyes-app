@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import '../models/movie.dart';
 import '../models/movie_detail.dart';
@@ -8,6 +9,27 @@ class ApiService {
   static const String baseUrl = 'https://api.themoviedb.org/3';
   static const String imageBaseUrl = 'https://image.tmdb.org/t/p/w500';
   static const String backdropBaseUrl = 'https://image.tmdb.org/t/p/original';
+  static const String backendBaseUrl = 'http://10.0.2.2:3000/api/movies';
+  
+  // Storage for auth token
+  final FlutterSecureStorage _storage = FlutterSecureStorage();
+
+  // Get auth token
+  Future<String?> _getToken() async {
+    return await _storage.read(key: 'auth_token');
+  }
+
+  // Get headers for API requests
+  Future<Map<String, String>> _getHeaders() async {
+    final token = await _getToken();
+    if (token == null) {
+      throw Exception('Authentication token not found');
+    }
+    return {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json',
+    };
+  }
 
   // Get popular movies
   Future<List<Movie>> getPopularMovies({int page = 1}) async {
@@ -231,6 +253,174 @@ class ApiService {
     } else {
       throw Exception('Failed to load genres');
     }
+  }
+
+  // FAVORITES API METHODS
+
+  // Add to favorites
+  Future<FavoriteResponse> addToFavorites(int movieId) async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.post(
+        Uri.parse('$backendBaseUrl/addToFavorites'),
+        headers: headers,
+        body: json.encode({'tmdbId': movieId}),
+      );
+
+      if (response.statusCode == 201) {
+        return FavoriteResponse.fromJson(json.decode(response.body));
+      } else {
+        throw Exception('Failed to add to favorites: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error adding to favorites: $e');
+      throw Exception('Failed to add to favorites: $e');
+    }
+  }
+  
+  // Remove from favorites
+  Future<bool> removeFromFavorites(int favoriteId) async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.delete(
+        Uri.parse('$backendBaseUrl/favorites/$favoriteId'),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        throw Exception('Failed to remove from favorites: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error removing from favorites: $e');
+      throw Exception('Failed to remove from favorites: $e');
+    }
+  }
+  
+  // Get user's favorites
+  Future<List<FavoriteResponse>> getFavorites() async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.get(
+        Uri.parse('$backendBaseUrl/favorites'),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        List<dynamic> data = json.decode(response.body);
+        return data.map((item) => FavoriteResponse.fromJson(item)).toList();
+      } else {
+        throw Exception('Failed to get favorites: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error getting favorites: $e');
+      throw Exception('Failed to get favorites: $e');
+    }
+  }
+  
+  // Check if a movie is in favorites
+  Future<bool> checkIfFavorite(int movieId) async {
+    try {
+      final favorites = await getFavorites();
+      return favorites.any((fav) => fav.movie.tmdbId == movieId);
+    } catch (e) {
+      print('Error checking favorite status: $e');
+      return false;
+    }
+  }
+  
+  // Get favorite ID for a movie (needed for removal)
+  Future<int?> getFavoriteId(int movieId) async {
+    try {
+      final favorites = await getFavorites();
+      final favorite = favorites.firstWhere(
+        (fav) => fav.movie.tmdbId == movieId,
+        orElse: () => throw Exception('Movie not in favorites'),
+      );
+      return favorite.id;
+    } catch (e) {
+      return null;
+    }
+  }
+}
+
+// Models for the backend API responses
+
+// Response model for the addToFavorites endpoint
+class FavoriteResponse {
+  final int id;
+  final int userId;
+  final int movieId;
+  final String createdAt;
+  final FavoriteMovieDetails movie;
+
+  FavoriteResponse({
+    required this.id,
+    required this.userId,
+    required this.movieId,
+    required this.createdAt,
+    required this.movie,
+  });
+
+  factory FavoriteResponse.fromJson(Map<String, dynamic> json) {
+    return FavoriteResponse(
+      id: json['id'],
+      userId: json['userId'],
+      movieId: json['movieId'],
+      createdAt: json['createdAt'],
+      movie: FavoriteMovieDetails.fromJson(json['movie']),
+    );
+  }
+  
+  // Convert to Movie object
+  Movie toMovie() {
+    return Movie(
+      id: movie.tmdbId,
+      title: movie.title,
+      overview: movie.overview,
+      posterPath: movie.posterPath,
+      backdropPath: movie.backdropPath,
+      releaseDate: movie.releaseDate ?? 'Unknown',
+      voteAverage: movie.voteAverage,
+    );
+  }
+}
+
+class FavoriteMovieDetails {
+  final int id;
+  final int tmdbId;
+  final String title;
+  final String overview;
+  final String? posterPath;
+  final String? backdropPath;
+  final String? releaseDate;
+  final double voteAverage;
+
+  FavoriteMovieDetails({
+    required this.id,
+    required this.tmdbId,
+    required this.title,
+    required this.overview,
+    this.posterPath,
+    this.backdropPath,
+    this.releaseDate,
+    required this.voteAverage,
+  });
+
+  factory FavoriteMovieDetails.fromJson(Map<String, dynamic> json) {
+    return FavoriteMovieDetails(
+      id: json['id'],
+      tmdbId: json['tmdbId'],
+      title: json['title'],
+      overview: json['overview'],
+      posterPath: json['posterPath'],
+      backdropPath: json['backdropPath'],
+      releaseDate: json['releaseDate'],
+      voteAverage: json['voteAverage'] is int 
+          ? (json['voteAverage'] as int).toDouble() 
+          : (json['voteAverage'] as num).toDouble(),
+    );
   }
 }
 
