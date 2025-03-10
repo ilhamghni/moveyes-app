@@ -2,17 +2,11 @@ class User {
   final int id;
   final String email;
   final String name;
-  final String createdAt;
-  final String updatedAt;
-  final UserProfile profile;
 
   User({
     required this.id,
     required this.email,
     required this.name,
-    required this.createdAt,
-    required this.updatedAt,
-    required this.profile,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -20,21 +14,27 @@ class User {
       id: json['id'],
       email: json['email'],
       name: json['name'],
-      createdAt: json['createdAt'],
-      updatedAt: json['updatedAt'],
-      profile: UserProfile.fromJson(json['profile']),
     );
   }
-  
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'email': email,
       'name': name,
-      'createdAt': createdAt,
-      'updatedAt': updatedAt,
-      'profile': profile.toJson(),
     };
+  }
+
+  User copyWith({
+    int? id,
+    String? email,
+    String? name,
+  }) {
+    return User(
+      id: id ?? this.id,
+      email: email ?? this.email,
+      name: name ?? this.name,
+    );
   }
 }
 
@@ -59,7 +59,7 @@ class UserProfile {
       userId: json['userId'],
     );
   }
-  
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,

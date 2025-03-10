@@ -1,22 +1,36 @@
 import 'dart:convert';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import '../models/profile.dart';
+import '../models/user.dart';
 
 class ProfileService {
   final String baseUrl = 'http://10.0.2.2:3000/api/profile';
-  
-  // Get auth token from shared preferences
+  static const String tokenKey = 'auth_token';
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+
+  // Get auth token with error handling
   Future<String?> _getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('auth_token');
+    try {
+      final token = await _storage.read(key: tokenKey);
+      if (token == null || token.isEmpty) {
+        print('No token found in secure storage');
+      }
+      return token;
+    } catch (e) {
+      print('Error retrieving token from secure storage: $e');
+      return null;
+    }
   }
 
+  // Get user profile
   Future<Profile> getProfile() async {
     try {
       final token = await _getToken();
-      if (token == null) throw Exception('No authentication token found');
-
+      if (token == null || token.isEmpty) {
+        throw Exception('Authentication token not found');
+      }
+      
       final response = await http.get(
         Uri.parse(baseUrl),
         headers: {
@@ -25,31 +39,47 @@ class ProfileService {
         },
       );
 
+      print('Get profile response: ${response.statusCode}');
+      
       if (response.statusCode == 200) {
-        return Profile.fromJson(jsonDecode(response.body));
+        final data = jsonDecode(response.body);
+        return Profile.fromJson(data);
       } else {
-        final errorMessage = jsonDecode(response.body)['message'] ?? 'Unknown error occurred';
-        throw Exception(errorMessage);
+        final error = jsonDecode(response.body)['message'] ?? 'Failed to fetch profile';
+        throw Exception(error);
       }
     } catch (e) {
+      print('Error getting profile: $e');
       throw Exception('Failed to fetch profile: $e');
     }
   }
 
+  // Update user profile
   Future<Profile> updateProfile({
     String? bio,
     String? avatarUrl,
     String? name,
+    String? nickname,
+    String? hobbies,
+    Map<String, dynamic>? socialMedia,
   }) async {
     try {
       final token = await _getToken();
-      if (token == null) throw Exception('No authentication token found');
-
+      if (token == null || token.isEmpty) {
+        throw Exception('Authentication token not found');
+      }
+      
+      // Build request body with only the fields that are provided
       final Map<String, dynamic> requestBody = {};
       if (bio != null) requestBody['bio'] = bio;
       if (avatarUrl != null) requestBody['avatarUrl'] = avatarUrl;
       if (name != null) requestBody['name'] = name;
+      if (nickname != null) requestBody['nickname'] = nickname;
+      if (hobbies != null) requestBody['hobbies'] = hobbies;
+      if (socialMedia != null) requestBody['socialMedia'] = socialMedia;
 
+      print('Updating profile with: $requestBody');
+      
       final response = await http.put(
         Uri.parse(baseUrl),
         headers: {
@@ -59,13 +89,17 @@ class ProfileService {
         body: jsonEncode(requestBody),
       );
 
+      print('Update profile response: ${response.statusCode}');
+      
       if (response.statusCode == 200) {
-        return Profile.fromJson(jsonDecode(response.body));
+        final data = jsonDecode(response.body);
+        return Profile.fromJson(data);
       } else {
-        final errorMessage = jsonDecode(response.body)['message'] ?? 'Unknown error occurred';
-        throw Exception(errorMessage);
+        final error = jsonDecode(response.body)['message'] ?? 'Failed to update profile';
+        throw Exception(error);
       }
     } catch (e) {
+      print('Error updating profile: $e');
       throw Exception('Failed to update profile: $e');
     }
   }

@@ -133,6 +133,7 @@ class AuthService {
       debugPrint('User logged out successfully');
     } catch (e) {
       debugPrint('Error during logout: $e');
+      throw Exception('Error during logout: $e');
     }
   }
 }
