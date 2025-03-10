@@ -7,8 +7,13 @@ import 'see_all_movies_screen.dart';
 
 class MovieDetailScreen extends StatefulWidget {
   final int movieId;
+  final int? initialTab; // Add this parameter
 
-  const MovieDetailScreen({super.key, required this.movieId});
+  const MovieDetailScreen({
+    super.key,
+    required this.movieId,
+    this.initialTab,  // Allow specifying which tab to open initially
+  });
 
   @override
   State<MovieDetailScreen> createState() => _MovieDetailScreenState();
@@ -54,6 +59,18 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> with SingleTicker
         curve: const Interval(0.4, 1.0, curve: Curves.easeIn),
       ),
     );
+
+    // If initialTab is provided, set up tab controller accordingly
+    if (widget.initialTab != null) {
+      // This will depend on how your tabs are structured
+      // You might need to modify this based on your actual implementation
+      // For example, if you're using a TabController:
+      // _tabController = TabController(
+      //   length: 2,
+      //   vsync: this,
+      //   initialIndex: widget.initialTab!,
+      // );
+    }
   }
 
   Future<void> _checkFavoriteStatus() async {
@@ -134,6 +151,37 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> with SingleTicker
     }
   }
 
+  // Add a method to update watch progress
+  Future<void> _updateWatchProgress(int progress) async {
+    try {
+      await _apiService.updateWatchProgress(
+        tmdbId: widget.movieId,
+        progress: progress,
+      );
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Watch progress updated'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error updating watch progress: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update watch progress: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   void dispose() {
     _animationController.dispose();
@@ -148,6 +196,24 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> with SingleTicker
         throw Exception('Could not launch $url');
       }
     }
+  }
+
+  // Add this helper method for the progress buttons
+  Widget _buildProgressButton(int progress) {
+    return ElevatedButton(
+      onPressed: () {
+        Navigator.pop(context);
+        _updateWatchProgress(progress);
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFFE21221),
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        minimumSize: Size.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+      child: Text('$progress%'),
+    );
   }
 
   @override
@@ -452,6 +518,57 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> with SingleTicker
                                         ),
                                       ),
                                     ),
+
+                                  const SizedBox(height: 24),
+
+                                  // Watch Movie Button with progress tracking
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton.icon(
+                                      onPressed: () {
+                                        // Simulate watching a movie and updating progress
+                                        // In a real app, this would open a video player
+                                        // and track actual viewing progress
+                                        showDialog(
+                                          context: context,
+                                          builder: (context) => AlertDialog(
+                                            backgroundColor: const Color(0xFF211F30),
+                                            title: const Text('Simulate Watch Progress'),
+                                            content: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                const Text('Select watch progress:'),
+                                                const SizedBox(height: 20),
+                                                Row(
+                                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                                  children: [
+                                                    _buildProgressButton(25),
+                                                    _buildProgressButton(50),
+                                                    _buildProgressButton(75),
+                                                    _buildProgressButton(100),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      icon: const Icon(Icons.play_arrow),
+                                      label: const Text('Watch Movie'),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(0xFFE21221),
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(vertical: 12),
+                                        textStyle: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
 
                                   const SizedBox(height: 24),
 

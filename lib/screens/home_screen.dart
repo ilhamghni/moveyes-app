@@ -6,8 +6,9 @@ import '../widgets/trending_movie_card.dart';
 import '../widgets/search_bar_widget.dart';
 import 'see_all_movies_screen.dart';
 import 'search_screen.dart';
-import 'package:moveyes_app/services/auth_service.dart';
-import 'package:moveyes_app/models/user.dart';
+import '../services/auth_service.dart';
+import '../models/user.dart';
+import '../constants/app_colors.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool showBottomNav;
@@ -20,8 +21,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final ApiService _apiService = ApiService();
-  late Future<List<Movie>> _popularMovies;
-  late Future<List<Movie>> _trendingMovies;
   bool _isLoadingPopular = true;
   bool _isLoadingTrending = true;
   List<Movie> _popularMoviesList = [];
@@ -96,7 +95,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Moveyes'),
+        title: Image.asset(
+          'lib/assets/images/logo.png',
+          height: 35,
+        ),
         actions: [
           IconButton(
             icon: Icon(Icons.logout),
@@ -106,7 +108,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       backgroundColor: Theme.of(context).colorScheme.background,
       body: _isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator(color: AppColors.primary))
           : _user == null
               ? Center(child: Text('Error loading user data'))
               : SafeArea(
@@ -123,7 +125,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 const Text(
-                                  "Moveyes",
+                                  "Watch Now",
                                   style: TextStyle(
                                     fontSize: 28,
                                     fontWeight: FontWeight.bold,
@@ -132,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                                 Container(
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF2D2741).withOpacity(0.8),
+                                    color: AppColors.surface.withOpacity(0.8),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   padding: const EdgeInsets.all(8),
@@ -206,7 +208,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           SizedBox(
                             height: 200,
                             child: _isLoadingTrending
-                                ? const Center(child: CircularProgressIndicator(color: Color(0xFF9A4FFF)))
+                                ? Center(child: CircularProgressIndicator(color: AppColors.primary))
                                 : _trendingMoviesList.isEmpty
                                     ? const Center(child: Text('No trending movies available'))
                                     : ListView.builder(
@@ -259,7 +261,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           const SizedBox(height: 16),
                           
                           _isLoadingPopular
-                              ? const Center(child: CircularProgressIndicator(color: Color(0xFF9A4FFF)))
+                              ? Center(child: CircularProgressIndicator(color: AppColors.primary))
                               : _popularMoviesList.isEmpty
                                   ? const Center(child: Text('No popular movies available'))
                                   : GridView.builder(
@@ -297,7 +299,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       height: 70,
       decoration: BoxDecoration(
-        color: const Color(0xFF2D2741).withOpacity(0.9),
+        color: AppColors.surface.withOpacity(0.9),
         borderRadius: const BorderRadius.vertical(
           top: Radius.circular(20),
         ),
@@ -330,7 +332,7 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         Icon(
           icon,
-          color: isSelected ? const Color(0xFF9A4FFF) : Colors.white54,
+          color: isSelected ? AppColors.primary : AppColors.textDisabled,
           size: 24,
         ),
         const SizedBox(height: 4),
@@ -338,7 +340,7 @@ class _HomeScreenState extends State<HomeScreen> {
           label,
           style: TextStyle(
             fontSize: 12,
-            color: isSelected ? const Color(0xFF9A4FFF) : Colors.white54,
+            color: isSelected ? AppColors.primary : AppColors.textDisabled,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
         ),
@@ -346,78 +348,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Helper method to build movie section with "See all" functionality
-  Widget _buildMovieSection(
-    BuildContext context,
-    String title,
-    List<Movie> movies,
-    String category,
-    bool isLoading,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => SeeAllMoviesScreen(
-                        title: title,
-                        initialMovies: movies,
-                        category: category,
-                      ),
-                    ),
-                  );
-                },
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.white54,
-                ),
-                child: const Text("See all"),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        SizedBox(
-          height: 250,
-          child: isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(color: Color(0xFFE21221)),
-                )
-              : movies.isEmpty
-                  ? const Center(child: Text('No movies available'))
-                  : ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: movies.length,
-                      itemBuilder: (context, index) {
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 16),
-                          child: SizedBox(
-                            width: 140,
-                            child: MovieCard(movie: movies[index]),
-                          ),
-                        );
-                      },
-                    ),
-        ),
-      ],
-    );
-  }
-  
+ 
   // Additional movie sections that could be added to the home screen
   Widget _buildAdditionalMovieSections() {
     // This is a placeholder for adding more movie sections

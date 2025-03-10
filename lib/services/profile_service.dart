@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import '../models/profile.dart';
-import '../models/user.dart';
 
 class ProfileService {
   final String baseUrl = 'http://10.0.2.2:3000/api/profile';

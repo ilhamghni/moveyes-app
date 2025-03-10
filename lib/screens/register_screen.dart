@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:moveyes_app/services/auth_service.dart';
+import '../services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   @override

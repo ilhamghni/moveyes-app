@@ -3,6 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import '../models/movie.dart';
 import '../models/movie_detail.dart';
+import '../models/watch_history.dart';
 
 class ApiService {
   static const String apiKey = '';
@@ -10,14 +11,13 @@ class ApiService {
   static const String imageBaseUrl = 'https://image.tmdb.org/t/p/w500';
   static const String backdropBaseUrl = 'https://image.tmdb.org/t/p/original';
   static const String backendBaseUrl = 'http://10.0.2.2:3000/api/movies';
+  static const String watchHistoryBaseUrl = 'http://10.0.2.2:3000/api/watch-history';
   
-  // Token key - ensure this matches with AuthService
   static const String tokenKey = 'auth_token';
   
-  // Storage for auth token
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
-  // Get auth token with improved error handling
+
   Future<String?> _getToken() async {
     try {
       final token = await _storage.read(key: tokenKey);
@@ -29,19 +29,6 @@ class ApiService {
       print('Error retrieving token from secure storage: $e');
       return null;
     }
-  }
-
-  // Get headers for API requests with improved error handling
-  Future<Map<String, String>> _getHeaders() async {
-    final token = await _getToken();
-    if (token == null || token.isEmpty) {
-      throw Exception('Authentication token not found');
-    }
-    
-    return {
-      'Authorization': 'Bearer $token',
-      'Content-Type': 'application/json',
-    };
   }
 
   // Get popular movies
@@ -148,7 +135,6 @@ class ApiService {
     }
   }
 
-  // Search movies with optional filters
   Future<List<Movie>> searchMovies({
     required String query,
     int page = 1,
@@ -195,7 +181,6 @@ class ApiService {
     }
   }
 
-  // Discover movies with more advanced filtering
   Future<List<Movie>> discoverMovies({
     int page = 1,
     int? year,
@@ -268,9 +253,7 @@ class ApiService {
     }
   }
 
-  // FAVORITES API METHODS
 
-  // Add to favorites with better error handling
   Future<bool> addToFavorites(int movieId) async {
     try {
       final token = await _getToken();
@@ -303,7 +286,6 @@ class ApiService {
     }
   }
   
-  // Remove from favorites with better error handling
   Future<bool> removeFromFavorites(int movieId) async {
     try {
       final token = await _getToken();
@@ -312,12 +294,23 @@ class ApiService {
         throw Exception('Authentication token not found');
       }
 
-      // First get the favorite ID
-      final favoriteId = await getFavoriteId(movieId);
-      if (favoriteId == null) {
-        print('Movie not found in favorites');
-        throw Exception('Movie not found in favorites');
+      // Get favorites to find the one with matching TMDB ID
+      final favorites = await getFavorites();
+      print('Looking for tmdbId: $movieId in ${favorites.length} favorites');
+      
+      // Debug all favorites to find potential mismatches
+      for (var fav in favorites) {
+        print('Favorite: id=${fav.id}, movieId=${fav.movieId}, tmdbId=${fav.movie.tmdbId}, title="${fav.movie.title}"');
       }
+      
+      // Find the favorite with matching TMDB ID
+      final favorite = favorites.firstWhere(
+        (fav) => fav.movie.tmdbId == movieId,
+        orElse: () => throw Exception('Movie not found in favorites'),
+      );
+      
+      final favoriteId = favorite.id;
+      print('Found favorite: id=$favoriteId, title="${favorite.movie.title}", tmdbId=${favorite.movie.tmdbId}');
 
       print('Sending remove from favorites request for favoriteId: $favoriteId');
       
@@ -342,7 +335,6 @@ class ApiService {
     }
   }
   
-  // Get user's favorites with better error handling
   Future<List<FavoriteResponse>> getFavorites() async {
     try {
       final token = await _getToken();
@@ -376,7 +368,6 @@ class ApiService {
     }
   }
   
-  // Check if a movie is in favorites with better error handling
   Future<bool> checkIfFavorite(int movieId) async {
     try {
       final token = await _getToken();
@@ -408,14 +399,23 @@ class ApiService {
     }
   }
   
-  // Get favorite ID for a movie with better error handling
   Future<int?> getFavoriteId(int movieId) async {
     try {
       final favorites = await getFavorites();
+      
+      // Debug logging
+      print('Looking for tmdbId: $movieId in favorites');
+      for (var fav in favorites) {
+        print('Favorite: id=${fav.id}, movieId=${fav.movieId}, tmdbId=${fav.movie.tmdbId}, title="${fav.movie.title}"');
+      }
+      
+      // Try to find the favorite with matching TMDB ID
       final favorite = favorites.firstWhere(
         (fav) => fav.movie.tmdbId == movieId,
-        orElse: () => throw Exception('Movie not in favorites'),
+        orElse: () => throw Exception('Movie not found in favorites'),
       );
+      
+      print('Found favorite with id: ${favorite.id} for movie: "${favorite.movie.title}"');
       return favorite.id;
     } catch (e) {
       print('Error getting favorite ID: $e');
@@ -423,11 +423,72 @@ class ApiService {
     }
   }
 
+  Future<List<WatchHistory>> getWatchHistory() async {
+    try {
+      final token = await _getToken();
+      if (token == null) {
+        throw Exception('Authentication token not found');
+      }
+
+      final response = await http.get(
+        Uri.parse(watchHistoryBaseUrl),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return data.map((json) => WatchHistory.fromJson(json)).toList();
+      } else {
+        final error = jsonDecode(response.body)['message'] ?? 'Unknown error';
+        throw Exception('Failed to fetch watch history: $error');
+      }
+    } catch (e) {
+      print('Error getting watch history: $e');
+      throw Exception('Failed to fetch watch history: $e');
+    }
+  }
+
+  Future<WatchHistory> updateWatchProgress({
+    required int tmdbId,
+    required int progress,
+  }) async {
+    try {
+      final token = await _getToken();
+      if (token == null) {
+        throw Exception('Authentication token not found');
+      }
+
+      final response = await http.post(
+        Uri.parse('$watchHistoryBaseUrl/update'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'tmdbId': tmdbId,
+          'progress': progress,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return WatchHistory.fromJson(jsonDecode(response.body));
+      } else {
+        final error = jsonDecode(response.body)['message'] ?? 'Unknown error';
+        throw Exception('Failed to update watch progress: $error');
+      }
+    } catch (e) {
+      print('Error updating watch progress: $e');
+      throw Exception('Failed to update watch progress: $e');
+    }
+  }
+
 }
 
 // Models for the backend API responses
 
-// Response model for the addToFavorites endpoint
 class FavoriteResponse {
   final int id;
   final int userId;

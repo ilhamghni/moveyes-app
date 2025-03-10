@@ -1,5 +1,3 @@
-import 'package:moveyes_app/models/user.dart';
-
 class Profile {
   final int id;
   final String bio;

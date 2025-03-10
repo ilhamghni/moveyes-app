@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:moveyes_app/models/movie.dart';
+import '../models/movie.dart';
 import '../services/api_service.dart';
 import '../widgets/movie_card.dart';
 import 'dart:async';

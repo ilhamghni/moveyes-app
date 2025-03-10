@@ -1,4 +1,4 @@
-import 'package:moveyes_app/models/user.dart';
+import '../models/user.dart';
 
 class AuthResponse {
   final String token;

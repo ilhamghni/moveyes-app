@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:moveyes_app/services/auth_service.dart';
-import 'package:moveyes_app/screens/register_screen.dart';
+import '../services/auth_service.dart';
+import '../screens/register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -61,14 +61,12 @@ class _LoginScreenState extends State<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
-                  'Moveyes',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                Center(
+                  child: Image.asset(
+                    'lib/assets/images/logo.png',
+                    width: 120,
+                    height: 120,
                   ),
-                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 48),
                 TextFormField(

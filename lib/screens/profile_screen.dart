@@ -471,14 +471,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 20),
           const Divider(color: Colors.white24),
           
-          // Additional options
-          ListTile(
-            title: const Text('My Favorites'),
-            leading: const Icon(Icons.favorite, color: Color(0xFFE21221)),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.of(context).pushNamed('/favorites'),
-          ),
-          
           ListTile(
             title: const Text('Edit Profile'),
             leading: const Icon(Icons.edit, color: Color(0xFFE21221)),

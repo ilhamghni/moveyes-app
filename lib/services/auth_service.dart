@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:moveyes_app/models/auth_response.dart';
-import 'package:moveyes_app/models/user.dart';
+import '../models/auth_response.dart';
+import '../models/user.dart';
 import 'package:flutter/foundation.dart';
 
 class AuthService {

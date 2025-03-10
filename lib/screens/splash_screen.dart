@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:moveyes_app/services/auth_service.dart';
+import '../services/auth_service.dart';
 
 class SplashScreen extends StatefulWidget {
   @override
@@ -40,9 +40,10 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              'Moveyes',
-              style: Theme.of(context).textTheme.headlineLarge,
+            Image.asset(
+              'lib/assets/images/logo.png',
+              width: 150,
+              height: 150,
             ),
             const SizedBox(height: 20),
             CircularProgressIndicator(

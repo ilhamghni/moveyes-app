@@ -3,7 +3,7 @@ import 'home_screen.dart';
 import 'search_screen.dart';
 import 'favorites_screen.dart';
 import 'profile_screen.dart';
-import 'package:moveyes_app/services/auth_service.dart';
+import 'watch_history_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({Key? key}) : super(key: key);
@@ -14,34 +14,20 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
-  final AuthService _authService = AuthService();
   
   final List<Widget> _screens = [
     const HomeScreen(showBottomNav: false),
     const SearchScreen(),
     const FavoritesScreen(),
+    const WatchHistoryScreen(),
     const ProfileScreen(),
   ];
 
-  // Page titles
-  final List<String> _titles = [
-    'Home',
-    'Search',
-    'Favorites',
-    'Profile',
-  ];
 
   void _onTabTapped(int index) {
     setState(() {
       _currentIndex = index;
     });
-  }
-
-  void _logout() async {
-    await _authService.logout();
-    if (mounted) {
-      Navigator.of(context).pushReplacementNamed('/login');
-    }
   }
 
   @override
@@ -89,6 +75,11 @@ class _MainScreenState extends State<MainScreen> {
               icon: Icon(Icons.favorite_outline),
               activeIcon: Icon(Icons.favorite),
               label: 'Favorites',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.history_outlined),
+              activeIcon: Icon(Icons.history),
+              label: 'History',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.person_outline),
