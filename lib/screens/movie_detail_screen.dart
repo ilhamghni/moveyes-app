@@ -21,6 +21,8 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> with SingleTicker
   late Animation<double> _backdropAnimation;
   late Animation<double> _contentFadeAnimation;
   final ScrollController _scrollController = ScrollController();
+  bool _isFavorite = false;
+  bool _isLoadingFavorite = false;
 
   // Track if we've initialized the animation
   bool _animationInitialized = false;
@@ -29,6 +31,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> with SingleTicker
   void initState() {
     super.initState();
     _movieDetailFuture = _apiService.getMovieDetails(widget.movieId);
+    _checkFavoriteStatus();
     
     // Setup animation controller with longer duration
     _animationController = AnimationController(
@@ -51,6 +54,84 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> with SingleTicker
         curve: const Interval(0.4, 1.0, curve: Curves.easeIn),
       ),
     );
+  }
+
+  Future<void> _checkFavoriteStatus() async {
+    try {
+      final status = await _apiService.checkIfFavorite(widget.movieId);
+      if (mounted) {
+        setState(() {
+          _isFavorite = status;
+        });
+      }
+    } catch (e) {
+      // Silently handle the error, just leave the button in default state
+      print('Error checking favorite status: $e');
+    }
+  }
+
+  Future<void> _toggleFavorite() async {
+    setState(() {
+      _isLoadingFavorite = true;
+    });
+
+    try {
+      bool success = false;
+      
+      if (_isFavorite) {
+        // If currently favorited, remove from favorites
+        success = await _apiService.removeFromFavorites(widget.movieId);
+      } else {
+        // If not favorited, add to favorites
+        await _apiService.addToFavorites(widget.movieId);
+        success = true;
+      }
+
+      if (mounted) {
+        setState(() {
+          if (success) {
+            _isFavorite = !_isFavorite;
+          }
+          _isLoadingFavorite = false;
+        });
+
+        // Show feedback
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(_isFavorite 
+                ? 'Added to favorites' 
+                : 'Removed from favorites'),
+              backgroundColor: _isFavorite ? Colors.green : Colors.red,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to update favorites'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      print('Error toggling favorite: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingFavorite = false;
+        });
+        
+        // Display error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update favorites: Please make sure you\'re logged in'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -182,9 +263,21 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> with SingleTicker
                                     color: Colors.black26,
                                     borderRadius: BorderRadius.circular(12),
                                   ),
-                                  child: const Icon(Icons.favorite_border),
+                                  child: _isLoadingFavorite
+                                    ? const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : Icon(
+                                        _isFavorite ? Icons.favorite : Icons.favorite_border,
+                                        color: _isFavorite ? const Color(0xFFE21221) : Colors.white,
+                                      ),
                                 ),
-                                onPressed: () {},
+                                onPressed: _isLoadingFavorite ? null : _toggleFavorite,
                               ),
                             ),
                             const SizedBox(width: 16),
@@ -278,6 +371,34 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> with SingleTicker
                                     ],
                                   ),
 
+                                  const SizedBox(height: 16),
+                                  
+                                  // Add/Remove Favorite Button
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: OutlinedButton.icon(
+                                      onPressed: _isLoadingFavorite ? null : _toggleFavorite,
+                                      icon: Icon(
+                                        _isFavorite ? Icons.favorite : Icons.favorite_border,
+                                        color: _isFavorite ? const Color(0xFFE21221) : Colors.white70,
+                                      ),
+                                      label: Text(
+                                        _isFavorite ? 'Remove from Favorites' : 'Add to Favorites',
+                                      ),
+                                      style: OutlinedButton.styleFrom(
+                                        foregroundColor: _isFavorite ? const Color(0xFFE21221) : Colors.white70,
+                                        side: BorderSide(
+                                          color: _isFavorite ? const Color(0xFFE21221) : Colors.white24,
+                                          width: 1,
+                                        ),
+                                        padding: const EdgeInsets.symmetric(vertical: 12),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  
                                   const SizedBox(height: 16),
 
                                   // Genres

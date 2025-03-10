@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:moveyes_app/models/auth_response.dart';
 import 'package:moveyes_app/models/user.dart';
@@ -9,6 +10,9 @@ class AuthService {
   final String baseUrl = 'http://10.0.2.2:3000/api/auth';
   static const String tokenKey = 'auth_token';
   static const String userKey = 'user_data';
+  
+  // Use secure storage for sensitive information
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
   Future<bool> login(String email, String password) async {
     try {
@@ -28,6 +32,9 @@ class AuthService {
       if (response.statusCode == 200) {
         final authResponse = AuthResponse.fromJson(jsonDecode(response.body));
         await _saveAuthData(authResponse);
+        if (kDebugMode) {
+          print('Login successful, token saved');
+        }
         return true;
       } else {
         debugPrint('Login failed: ${response.body}');
@@ -69,16 +76,19 @@ class AuthService {
   }
 
   Future<void> _saveAuthData(AuthResponse authResponse) async {
+    // Save token in secure storage
+    await _secureStorage.write(key: tokenKey, value: authResponse.token);
+    
+    // Save non-sensitive user data in SharedPreferences for faster access
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(tokenKey, authResponse.token);
     await prefs.setString(userKey, jsonEncode(authResponse.user.toJson()));
+    
     debugPrint('Auth data saved successfully');
   }
 
   Future<bool> isLoggedIn() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString(tokenKey);
+      final token = await _secureStorage.read(key: tokenKey);
       final result = token != null && token.isNotEmpty;
       debugPrint('isLoggedIn check: $result');
       return result;
@@ -89,8 +99,12 @@ class AuthService {
   }
 
   Future<String?> getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(tokenKey);
+    try {
+      return await _secureStorage.read(key: tokenKey);
+    } catch (e) {
+      debugPrint('Error getting token: $e');
+      return null;
+    }
   }
 
   Future<User?> getUser() async {
@@ -108,9 +122,17 @@ class AuthService {
   }
 
   Future<void> logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(tokenKey);
-    await prefs.remove(userKey);
-    debugPrint('User logged out successfully');
+    try {
+      // Clear secure storage
+      await _secureStorage.delete(key: tokenKey);
+      
+      // Clear SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(userKey);
+      
+      debugPrint('User logged out successfully');
+    } catch (e) {
+      debugPrint('Error during logout: $e');
+    }
   }
 }

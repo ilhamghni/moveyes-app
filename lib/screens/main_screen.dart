@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
+import 'search_screen.dart';
+import 'favorites_screen.dart';
 import 'profile_screen.dart';
 import 'package:moveyes_app/services/auth_service.dart';
 
@@ -12,37 +14,26 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
-  late PageController _pageController;
   final AuthService _authService = AuthService();
-
-  final List<Widget> _pages = const [
-    HomeScreen(showBottomNav: false),
-    // Placeholder pages for movies and favorites
-    Center(child: Text('Movies Screen - Coming Soon')),
-    Center(child: Text('Favorites Screen - Coming Soon')),
-    ProfileScreen(),
+  
+  final List<Widget> _screens = [
+    const HomeScreen(showBottomNav: false),
+    const SearchScreen(),
+    const FavoritesScreen(),
+    const ProfileScreen(),
   ];
 
-  @override
-  void initState() {
-    super.initState();
-    _pageController = PageController(initialPage: _currentIndex);
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
+  // Page titles
+  final List<String> _titles = [
+    'Home',
+    'Search',
+    'Favorites',
+    'Profile',
+  ];
 
   void _onTabTapped(int index) {
     setState(() {
       _currentIndex = index;
-      _pageController.animateToPage(
-        index,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
     });
   }
 
@@ -56,67 +47,56 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: PageView(
-        controller: _pageController,
-        physics: const NeverScrollableScrollPhysics(), // Disable swiping between pages
-        children: _pages,
-        onPageChanged: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
+      backgroundColor: const Color(0xFF15141F),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _screens,
       ),
       bottomNavigationBar: Container(
-        height: 70,
         decoration: BoxDecoration(
-          color: const Color(0xFF2D2741).withOpacity(0.9),
-          borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(20),
-          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 10,
-              spreadRadius: 1,
+              color: Colors.black26,
+              blurRadius: 8,
+              offset: const Offset(0, -2),
             ),
           ],
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _bottomNavItem(0, Icons.home, 'Home'),
-            _bottomNavItem(1, Icons.play_circle_outline, 'Movies'),
-            _bottomNavItem(2, Icons.favorite_border, 'Favorites'),
-            _bottomNavItem(3, Icons.person_outline, 'Profile'),
+        child: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: _onTabTapped,
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: const Color(0xFF211F30),
+          selectedItemColor: const Color(0xFFE21221),
+          unselectedItemColor: Colors.white54,
+          showSelectedLabels: true,
+          showUnselectedLabels: true,
+          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+          unselectedLabelStyle: const TextStyle(fontSize: 12),
+          elevation: 8,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined),
+              activeIcon: Icon(Icons.home),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.search_outlined),
+              activeIcon: Icon(Icons.search),
+              label: 'Search',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.favorite_outline),
+              activeIcon: Icon(Icons.favorite),
+              label: 'Favorites',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline),
+              activeIcon: Icon(Icons.person),
+              label: 'Profile',
+            ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _bottomNavItem(int index, IconData icon, String label) {
-    final bool isSelected = _currentIndex == index;
-    
-    return InkWell(
-      onTap: () => _onTabTapped(index),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            color: isSelected ? const Color(0xFF9A4FFF) : Colors.white54,
-            size: 24,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: isSelected ? const Color(0xFF9A4FFF) : Colors.white54,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            ),
-          ),
-        ],
       ),
     );
   }

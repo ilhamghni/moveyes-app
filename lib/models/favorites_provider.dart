@@ -60,7 +60,7 @@ class FavoritesProvider extends ChangeNotifier {
         final response = await _apiService.addToFavorites(movie.id);
         
         // Add locally
-        _favorites[movie.id] = response;
+        _favorites[movie.id] = response as FavoriteResponse;
         _isLoading = false;
         notifyListeners();
         return true; // Now a favorite
