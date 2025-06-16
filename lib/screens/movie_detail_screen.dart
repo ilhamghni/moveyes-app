@@ -709,7 +709,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> with SingleTicker
                                                   style: const TextStyle(color: Colors.white70),
                                                 ),
                                               ))
-                                          .toList(),
+                                          ,
                                     ],
                                     
                                     // Writers
@@ -732,7 +732,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> with SingleTicker
                                                   style: const TextStyle(color: Colors.white70),
                                                 ),
                                               ))
-                                          .toList(),
+                                          ,
                                     ],
                                   ],
 

@@ -30,8 +30,7 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.dark(
             primary: AppColors.primary, 
             secondary: AppColors.secondary, 
-            surface: AppColors.surface, 
-            background: AppColors.background,
+            surface: AppColors.surface,
             error: AppColors.error,
           ),
           appBarTheme: AppBarTheme(
@@ -63,14 +62,7 @@ class MyApp extends StatelessWidget {
             bodyMedium: GoogleFonts.poppins(
               color: AppColors.textSecondary,
             ),
-          ),
-          cardTheme: CardTheme(
-            color: AppColors.surface.withOpacity(0.9), 
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            elevation: 0,
-          ),
+          )
         ),
         home: SplashScreen(),
         routes: {

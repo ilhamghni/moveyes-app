@@ -23,7 +23,7 @@ class SeeAllMoviesScreen extends StatefulWidget {
 
 class _SeeAllMoviesScreenState extends State<SeeAllMoviesScreen> {
   late final ApiService _apiService = ApiService();
-  late List<Movie> _movies = widget.initialMovies;
+  late final List<Movie> _movies = widget.initialMovies;
   bool _isLoading = false;
   bool _hasMoreMovies = true;
   int _page = 1;

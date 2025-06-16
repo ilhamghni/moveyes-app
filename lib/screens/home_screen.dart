@@ -106,7 +106,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: _isLoading
           ? Center(child: CircularProgressIndicator(color: AppColors.primary))
           : _user == null

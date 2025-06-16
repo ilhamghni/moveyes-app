@@ -6,7 +6,7 @@ import '../widgets/watch_progress_bar.dart';
 import 'movie_detail_screen.dart';
 
 class WatchHistoryScreen extends StatefulWidget {
-  const WatchHistoryScreen({Key? key}) : super(key: key);
+  const WatchHistoryScreen({super.key});
 
   @override
   State<WatchHistoryScreen> createState() => _WatchHistoryScreenState();

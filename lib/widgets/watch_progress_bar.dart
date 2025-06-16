@@ -7,12 +7,12 @@ class WatchProgressBar extends StatelessWidget {
   final Color backgroundColor;
 
   const WatchProgressBar({
-    Key? key,
+    super.key,
     required this.progress,
     this.height = 6.0,
     this.progressColor = const Color(0xFFE21221),
     this.backgroundColor = const Color(0xFF3A3A3A),
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

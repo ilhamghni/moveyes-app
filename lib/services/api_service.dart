@@ -6,7 +6,7 @@ import '../models/movie_detail.dart';
 import '../models/watch_history.dart';
 
 class ApiService {
-  static const String apiKey = '';
+  static const String apiKey = '4e26b5f5a2434ba176b20acf95c32d09';
   static const String baseUrl = 'https://api.themoviedb.org/3';
   static const String imageBaseUrl = 'https://image.tmdb.org/t/p/w500';
   static const String backdropBaseUrl = 'https://image.tmdb.org/t/p/original';
