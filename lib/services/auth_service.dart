@@ -7,10 +7,11 @@ import '../models/user.dart';
 import 'package:flutter/foundation.dart';
 
 class AuthService {
-  final String baseUrl = 'http://10.0.2.2:3000/api/auth';
+  final String baseUrl =
+      'https://moveyes-server-48325740988.us-central1.run.app/api/auth';
   static const String tokenKey = 'auth_token';
   static const String userKey = 'user_data';
-  
+
   // Use secure storage for sensitive information
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
@@ -19,7 +20,7 @@ class AuthService {
       if (kDebugMode) {
         print('Attempting login with: $email');
       }
-      
+
       final response = await http.post(
         Uri.parse('$baseUrl/login'),
         headers: {'Content-Type': 'application/json'},
@@ -45,13 +46,13 @@ class AuthService {
       return false;
     }
   }
-  
+
   Future<bool> register(String email, String password, String name) async {
     try {
       if (kDebugMode) {
         print('Attempting registration for: $email');
       }
-      
+
       final response = await http.post(
         Uri.parse('$baseUrl/register'),
         headers: {'Content-Type': 'application/json'},
@@ -78,11 +79,11 @@ class AuthService {
   Future<void> _saveAuthData(AuthResponse authResponse) async {
     // Save token in secure storage
     await _secureStorage.write(key: tokenKey, value: authResponse.token);
-    
+
     // Save non-sensitive user data in SharedPreferences for faster access
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(userKey, jsonEncode(authResponse.user.toJson()));
-    
+
     debugPrint('Auth data saved successfully');
   }
 
@@ -125,11 +126,11 @@ class AuthService {
     try {
       // Clear secure storage
       await _secureStorage.delete(key: tokenKey);
-      
+
       // Clear SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(userKey);
-      
+
       debugPrint('User logged out successfully');
     } catch (e) {
       debugPrint('Error during logout: $e');

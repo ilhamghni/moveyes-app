@@ -10,13 +10,14 @@ class ApiService {
   static const String baseUrl = 'https://api.themoviedb.org/3';
   static const String imageBaseUrl = 'https://image.tmdb.org/t/p/w500';
   static const String backdropBaseUrl = 'https://image.tmdb.org/t/p/original';
-  static const String backendBaseUrl = 'http://10.0.2.2:3000/api/movies';
-  static const String watchHistoryBaseUrl = 'http://10.0.2.2:3000/api/watch-history';
-  
-  static const String tokenKey = 'auth_token';
-  
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  static const String backendBaseUrl =
+      'https://moveyes-server-48325740988.us-central1.run.app/api/movies';
+  static const String watchHistoryBaseUrl =
+      'https://moveyes-server-48325740988.us-central1.run.app/api/watch-history';
 
+  static const String tokenKey = 'auth_token';
+
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   Future<String?> _getToken() async {
     try {
@@ -60,11 +61,12 @@ class ApiService {
       throw Exception('Failed to load trending movies');
     }
   }
-  
+
   // Get movie details
   Future<MovieDetail> getMovieDetails(int movieId) async {
     final response = await http.get(
-      Uri.parse('$baseUrl/movie/$movieId?api_key=$apiKey&append_to_response=credits,videos,similar'),
+      Uri.parse(
+          '$baseUrl/movie/$movieId?api_key=$apiKey&append_to_response=credits,videos,similar'),
     );
 
     if (response.statusCode == 200) {
@@ -140,7 +142,8 @@ class ApiService {
     int page = 1,
     int? year,
     List<int>? genreIds,
-    String? sortBy, // popularity.desc, release_date.desc, vote_average.desc, etc.
+    String?
+        sortBy, // popularity.desc, release_date.desc, vote_average.desc, etc.
   }) async {
     if (query.isEmpty) {
       return [];
@@ -169,7 +172,8 @@ class ApiService {
       queryParams['sort_by'] = sortBy;
     }
 
-    final uri = Uri.parse('$baseUrl/search/movie').replace(queryParameters: queryParams);
+    final uri = Uri.parse('$baseUrl/search/movie')
+        .replace(queryParameters: queryParams);
     final response = await http.get(uri);
 
     if (response.statusCode == 200) {
@@ -226,7 +230,8 @@ class ApiService {
       queryParams['with_crew'] = withCrew;
     }
 
-    final uri = Uri.parse('$baseUrl/discover/movie').replace(queryParameters: queryParams);
+    final uri = Uri.parse('$baseUrl/discover/movie')
+        .replace(queryParameters: queryParams);
     final response = await http.get(uri);
 
     if (response.statusCode == 200) {
@@ -253,7 +258,6 @@ class ApiService {
     }
   }
 
-
   Future<bool> addToFavorites(int movieId) async {
     try {
       final token = await _getToken();
@@ -263,7 +267,7 @@ class ApiService {
       }
 
       print('Sending add to favorites request for movieId: $movieId');
-      
+
       final response = await http.post(
         Uri.parse('$backendBaseUrl/addToFavorites'),
         headers: {
@@ -273,19 +277,21 @@ class ApiService {
         body: json.encode({'tmdbId': movieId}),
       );
 
-      print('Add to favorites response: ${response.statusCode} - ${response.body}');
-      
+      print(
+          'Add to favorites response: ${response.statusCode} - ${response.body}');
+
       if (response.statusCode == 201) {
         return true;
       } else {
-        throw Exception('Failed to add to favorites: ${response.statusCode} ${response.body}');
+        throw Exception(
+            'Failed to add to favorites: ${response.statusCode} ${response.body}');
       }
     } catch (e) {
       print('Error adding to favorites: $e');
       throw Exception('Failed to add to favorites: $e');
     }
   }
-  
+
   Future<bool> removeFromFavorites(int movieId) async {
     try {
       final token = await _getToken();
@@ -297,23 +303,26 @@ class ApiService {
       // Get favorites to find the one with matching TMDB ID
       final favorites = await getFavorites();
       print('Looking for tmdbId: $movieId in ${favorites.length} favorites');
-      
+
       // Debug all favorites to find potential mismatches
       for (var fav in favorites) {
-        print('Favorite: id=${fav.id}, movieId=${fav.movieId}, tmdbId=${fav.movie.tmdbId}, title="${fav.movie.title}"');
+        print(
+            'Favorite: id=${fav.id}, movieId=${fav.movieId}, tmdbId=${fav.movie.tmdbId}, title="${fav.movie.title}"');
       }
-      
+
       // Find the favorite with matching TMDB ID
       final favorite = favorites.firstWhere(
         (fav) => fav.movie.tmdbId == movieId,
         orElse: () => throw Exception('Movie not found in favorites'),
       );
-      
-      final favoriteId = favorite.id;
-      print('Found favorite: id=$favoriteId, title="${favorite.movie.title}", tmdbId=${favorite.movie.tmdbId}');
 
-      print('Sending remove from favorites request for favoriteId: $favoriteId');
-      
+      final favoriteId = favorite.id;
+      print(
+          'Found favorite: id=$favoriteId, title="${favorite.movie.title}", tmdbId=${favorite.movie.tmdbId}');
+
+      print(
+          'Sending remove from favorites request for favoriteId: $favoriteId');
+
       final response = await http.delete(
         Uri.parse('$backendBaseUrl/favorites/$favoriteId'),
         headers: {
@@ -322,19 +331,21 @@ class ApiService {
         },
       );
 
-      print('Remove from favorites response: ${response.statusCode} - ${response.body}');
-      
+      print(
+          'Remove from favorites response: ${response.statusCode} - ${response.body}');
+
       if (response.statusCode == 200) {
         return true;
       } else {
-        throw Exception('Failed to remove from favorites: ${response.statusCode} ${response.body}');
+        throw Exception(
+            'Failed to remove from favorites: ${response.statusCode} ${response.body}');
       }
     } catch (e) {
       print('Error removing from favorites: $e');
       throw Exception('Failed to remove from favorites: $e');
     }
   }
-  
+
   Future<List<FavoriteResponse>> getFavorites() async {
     try {
       final token = await _getToken();
@@ -344,7 +355,7 @@ class ApiService {
       }
 
       print('Sending get favorites request');
-      
+
       final response = await http.get(
         Uri.parse('$backendBaseUrl/favorites'),
         headers: {
@@ -354,7 +365,7 @@ class ApiService {
       );
 
       print('Get favorites response: ${response.statusCode}');
-      
+
       if (response.statusCode == 200) {
         List<dynamic> data = json.decode(response.body);
         return data.map((item) => FavoriteResponse.fromJson(item)).toList();
@@ -367,7 +378,7 @@ class ApiService {
       throw Exception('Failed to get favorites: $e');
     }
   }
-  
+
   Future<bool> checkIfFavorite(int movieId) async {
     try {
       final token = await _getToken();
@@ -384,13 +395,15 @@ class ApiService {
         },
       );
 
-      print('Check favorite status response: ${response.statusCode} - ${response.body}');
-      
+      print(
+          'Check favorite status response: ${response.statusCode} - ${response.body}');
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return data['isFavorited'] ?? false;
       } else {
-        print('Failed to check favorite status: ${response.statusCode} ${response.body}');
+        print(
+            'Failed to check favorite status: ${response.statusCode} ${response.body}');
         return false;
       }
     } catch (e) {
@@ -398,24 +411,26 @@ class ApiService {
       return false;
     }
   }
-  
+
   Future<int?> getFavoriteId(int movieId) async {
     try {
       final favorites = await getFavorites();
-      
+
       // Debug logging
       print('Looking for tmdbId: $movieId in favorites');
       for (var fav in favorites) {
-        print('Favorite: id=${fav.id}, movieId=${fav.movieId}, tmdbId=${fav.movie.tmdbId}, title="${fav.movie.title}"');
+        print(
+            'Favorite: id=${fav.id}, movieId=${fav.movieId}, tmdbId=${fav.movie.tmdbId}, title="${fav.movie.title}"');
       }
-      
+
       // Try to find the favorite with matching TMDB ID
       final favorite = favorites.firstWhere(
         (fav) => fav.movie.tmdbId == movieId,
         orElse: () => throw Exception('Movie not found in favorites'),
       );
-      
-      print('Found favorite with id: ${favorite.id} for movie: "${favorite.movie.title}"');
+
+      print(
+          'Found favorite with id: ${favorite.id} for movie: "${favorite.movie.title}"');
       return favorite.id;
     } catch (e) {
       print('Error getting favorite ID: $e');
@@ -484,7 +499,6 @@ class ApiService {
       throw Exception('Failed to update watch progress: $e');
     }
   }
-
 }
 
 // Models for the backend API responses
@@ -513,7 +527,7 @@ class FavoriteResponse {
       movie: FavoriteMovieDetails.fromJson(json['movie']),
     );
   }
-  
+
   // Convert to Movie object
   Movie toMovie() {
     return Movie(
@@ -558,8 +572,8 @@ class FavoriteMovieDetails {
       posterPath: json['posterPath'],
       backdropPath: json['backdropPath'],
       releaseDate: json['releaseDate'],
-      voteAverage: json['voteAverage'] is int 
-          ? (json['voteAverage'] as int).toDouble() 
+      voteAverage: json['voteAverage'] is int
+          ? (json['voteAverage'] as int).toDouble()
           : (json['voteAverage'] as num).toDouble(),
     );
   }
