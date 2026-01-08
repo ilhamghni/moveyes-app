@@ -1,11 +1,11 @@
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import '../models/profile.dart';
 
 class ProfileService {
-  final String baseUrl =
-      'https://moveyes-server-48325740988.us-central1.run.app/api/profile';
+  final String baseUrl = '${dotenv.env['BASE_URL']!}/profile';
   static const String tokenKey = 'auth_token';
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 

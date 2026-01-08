@@ -3,10 +3,10 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import '../models/watch_history_item.dart';
 import '../models/movie.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class WatchHistoryService {
-  final String baseUrl =
-      'https://moveyes-server-48325740988.us-central1.run.app/api/watch-history';
+  final String baseUrl = '${dotenv.env['BASE_URL']!}/watch-history';
   final FlutterSecureStorage storage = const FlutterSecureStorage();
 
   // Get headers with auth token

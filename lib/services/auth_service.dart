@@ -5,10 +5,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/auth_response.dart';
 import '../models/user.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AuthService {
-  final String baseUrl =
-      'https://moveyes-server-48325740988.us-central1.run.app/api/auth';
+  final String baseUrl = '${dotenv.env['BASE_URL']!}/auth';
+
   static const String tokenKey = 'auth_token';
   static const String userKey = 'user_data';
 

@@ -4,16 +4,17 @@ import 'package:http/http.dart' as http;
 import '../models/movie.dart';
 import '../models/movie_detail.dart';
 import '../models/watch_history.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ApiService {
   static const String apiKey = '4e26b5f5a2434ba176b20acf95c32d09';
   static const String baseUrl = 'https://api.themoviedb.org/3';
   static const String imageBaseUrl = 'https://image.tmdb.org/t/p/w500';
   static const String backdropBaseUrl = 'https://image.tmdb.org/t/p/original';
-  static const String backendBaseUrl =
-      'https://moveyes-server-48325740988.us-central1.run.app/api/movies';
-  static const String watchHistoryBaseUrl =
-      'https://moveyes-server-48325740988.us-central1.run.app/api/watch-history';
+  final String backendBaseUrl= '${dotenv.env['BASE_URL']!}/profile';
+
+  static final String watchHistoryBaseUrl =
+      '${dotenv.env['BASE_URL']!}/watch-history';
 
   static const String tokenKey = 'auth_token';
 
